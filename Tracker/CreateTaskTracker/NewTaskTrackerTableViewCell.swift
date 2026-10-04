@@ -19,8 +19,8 @@ class NewTaskTrackerTableViewCell: UITableViewCell {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .systemGray
+        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.textColor = .customGray
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -28,7 +28,7 @@ class NewTaskTrackerTableViewCell: UITableViewCell {
     private let arrowImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = .systemGray3
+        imageView.tintColor = .customGray
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -45,7 +45,7 @@ class NewTaskTrackerTableViewCell: UITableViewCell {
     
     func setupUI(){
         backgroundColor = .clear
-        contentView.backgroundColor = .systemGray6
+        contentView.backgroundColor = .backgroundDay
         
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)

@@ -36,7 +36,7 @@ class ScheduleTrackerViewCell: UITableViewCell{
     
     func setupUI(){
         backgroundColor = .clear
-        contentView.backgroundColor = .systemGray6
+        contentView.backgroundColor = .backgroundDay
         
         contentView.addSubview(titleLabel)
         contentView.addSubview(scheduleSwitch)

@@ -195,11 +195,7 @@ extension TrackerViewController: UICollectionViewDataSource{
         cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: "\(trackerRecord)", isCompleted: isCompleted)
         cell.onDoneButtonTapped = { [weak self] in
             guard let self else { return }
-            let presenterDateFormatted = dateFormatter.string(from: presenter.todayDate)
-            let trackerDateFormatted = dateFormatter.string(from: trackerDate.date)
-            if presenterDateFormatted == trackerDateFormatted{
-                presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
-            }
+            presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
         }
         return cell
     }

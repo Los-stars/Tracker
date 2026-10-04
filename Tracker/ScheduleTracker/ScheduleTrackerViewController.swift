@@ -51,7 +51,7 @@ final class ScheduleTrackerViewController: UIViewController{
             scheduleTableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             scheduleTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scheduleTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scheduleTableView.heightAnchor.constraint(equalToConstant: 540),
+            scheduleTableView.bottomAnchor.constraint(equalTo: doneButton.topAnchor, constant: -16),
             doneButton.heightAnchor.constraint(equalToConstant: 60),
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),

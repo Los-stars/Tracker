@@ -10,7 +10,6 @@ import Foundation
 final class TrackerViewControllerPresenter{
     var categories: [TrackerCategory] = []
     var completedTrackers: [TrackerRecord] = []
-    let todayDate: Date = Date()
     var currentDate: Date = Date()
     
     var onDataChanged: (() -> Void)?
@@ -57,6 +56,12 @@ final class TrackerViewControllerPresenter{
     }
     
     func markTrackerCompleted(_ tracker: Tracker, on date: Date){
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let target = calendar.startOfDay(for: date)
+            
+        guard target <= today else { return }
+        
         if isTrackerCompleted(tracker, on: date) {
             completedTrackers.removeAll {
                 $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: date)

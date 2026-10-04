@@ -5,6 +5,8 @@
 //  Created by Amir on 02.10.2026.
 //
 
+import Foundation
+
 final class NewTaskTrackerViewControllerPresenter{
     private var selectedDays: [WeekDay] = []
     var onDataChanged: (() -> Void)?

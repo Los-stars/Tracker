@@ -30,6 +30,7 @@ final class TrackerViewController: UIViewController {
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.dataSource = self
         cv.delegate = self
+        cv.register(TrackerHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: TrackerHeaderView.identifier)
         cv.register(TrackerCollectionViewCell.self, forCellWithReuseIdentifier: "TrackerCollectionViewCell")
         return cv
     }()
@@ -70,6 +71,7 @@ final class TrackerViewController: UIViewController {
             layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
             layout.estimatedItemSize = .zero
         }
+        
         
         setupUIElements()
         setupPlaceolder()
@@ -165,8 +167,8 @@ final class TrackerViewController: UIViewController {
     }
     
     @objc func addTask(){
-        let vc = NewTaskTrackerViewController()
-        vc.title = "Новая привычка"
+        let vc = ChooseTrackerTypeViewController()
+        vc.title = "Создание трекера"
         vc.delegate = self
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{
@@ -198,6 +200,28 @@ extension TrackerViewController: UICollectionViewDataSource{
             presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
         }
         return cell
+    }
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return presenter.numberOfCatogories()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader else {
+            return UICollectionReusableView()
+        }
+        guard let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier:  TrackerHeaderView.identifier, for: indexPath) as? TrackerHeaderView else {
+            return UICollectionReusableView()
+        }
+        
+        header.configure(with: presenter.categories[indexPath.section].title)
+        return header
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: collectionView.bounds.width, height: 16)
     }
 }
 

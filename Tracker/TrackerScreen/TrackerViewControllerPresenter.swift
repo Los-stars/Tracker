@@ -37,6 +37,10 @@ final class TrackerViewControllerPresenter{
         addTracker(tracker, toCategory: "Домашний уют")
     }
     
+    func numberOfCatogories() -> Int{
+        categories.count
+    }
+    
     func numberOfVisibleTrackers() -> Int{
         visibleTrackers.count
     }

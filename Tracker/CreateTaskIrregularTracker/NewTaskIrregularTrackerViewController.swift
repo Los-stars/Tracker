@@ -36,12 +36,27 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         return label
     }()
     
+    private let collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        layout.minimumInteritemSpacing = 16
+        layout.minimumLineSpacing = 16
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.isMultipleTouchEnabled = false
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.backgroundColor = .clear
+        collectionView.register(NewTaskIrregularTrackerCollectionViewCell.self, forCellWithReuseIdentifier: NewTaskIrregularTrackerCollectionViewCell.identifier)
+        collectionView.register(NewTaskIrregularTrackerSectionHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: NewTaskIrregularTrackerSectionHeaderView.identifier)
+        return collectionView
+    }()
+    
     private let menuTableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = .clear
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.register(NewTaskTrackerTableViewCell.self, forCellReuseIdentifier: NewTaskTrackerTableViewCell.identifier)
+        tableView.register(NewTaskIrregularTrackerTableViewCell.self, forCellReuseIdentifier: NewTaskIrregularTrackerTableViewCell.identifier)
         return tableView
     }()
     
@@ -97,11 +112,28 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     var delegate: NewTaskTrackerDelegate?
     private let presenter = NewTaskIrregularTrackerViewControllerPresenter()
     var menuTableViewItem = ["Категория"]
+    let emojiItem: [String] = ["🙂", "😻", "🌺", "🐶", "❤️", "😱",
+                     "😇", "😡", "🥶", "🤔", "🙌", "🍔",
+                     "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
+    let colorItem: [UIColor] = [.colorSection1, .colorSection2, .colorSection3, .colorSection4,
+                                .colorSection5, .colorSection6, .colorSection7, .colorSection8,
+                                .colorSection9, .colorSection10, .colorSection11, .colorSection12,
+                                .colorSection13, .colorSection14, .colorSection15, .colorSection16,
+                                .colorSection17, .colorSection18]
+    private var selectedEmojiIndex: Int?
+    private var selectedColorIndex: Int?
+    private lazy var sections: [NewTaskElementSection] = [
+        NewTaskElementSection(title: "Emoji", element: emojiItem.map({.emoji($0)})),
+        NewTaskElementSection(title: "Цвет", element: colorItem.map({.color($0)}))
+    ]
     override func viewDidLoad() {
         view.backgroundColor = .white
         
         menuTableView.dataSource = self
         menuTableView.delegate = self
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
         
         nameTrackerTextField.delegate = self
         setupUI()
@@ -116,6 +148,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         view.addSubview(nameTrackerTextField)
         view.addSubview(limitLabel)
         view.addSubview(menuTableView)
+        view.addSubview(collectionView)
         view.addSubview(buttonsStackView)
         
         NSLayoutConstraint.activate([
@@ -129,7 +162,11 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
             menuTableView.topAnchor.constraint(equalTo: nameTrackerTextField.bottomAnchor),
             menuTableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             menuTableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            menuTableView.heightAnchor.constraint(equalToConstant: 200),
+            menuTableView.heightAnchor.constraint(equalToConstant: 120),
+            collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            collectionView.topAnchor.constraint(equalTo: menuTableView.bottomAnchor, constant: 16),
+            collectionView.bottomAnchor.constraint(equalTo: buttonsStackView.topAnchor, constant: -16),
             buttonsStackView.heightAnchor.constraint(equalToConstant: 60),
             buttonsStackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             buttonsStackView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
@@ -143,7 +180,12 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     
     @objc private func didTapCreateButton(){
         guard let title = nameTrackerTextField.text else { return }
-        let tracker = Tracker(title: title, color: .brown, emoji: "😪", schedule: Schedule.everyday)
+        guard let emojiIndex = selectedEmojiIndex else { return }
+        guard let colorIndex = selectedColorIndex else { return }
+        
+        let selectedEmoji = emojiItem[emojiIndex]
+        let selectedColor = colorItem[colorIndex]
+        let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: Schedule.everyday)
         delegate?.didCreateTracker(tracker: tracker, category: "Домашний уют")
         dismiss(animated: true)
     }
@@ -155,7 +197,7 @@ extension NewTaskIrregularTrackerViewController: UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "NewTaskTrackerTableViewCell") as? NewTaskTrackerTableViewCell else { return UITableViewCell() }
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "NewTaskIrregularTrackerTableViewCell") as? NewTaskIrregularTrackerTableViewCell else { return UITableViewCell() }
         
         if indexPath.row == 0{
             cell.configure(with: menuTableViewItem[indexPath.row], subtitle: nil)
@@ -186,5 +228,84 @@ extension NewTaskIrregularTrackerViewController: UITableViewDelegate{
         if indexPath.row == 0{
             print("Tap Category")
         }
+    }
+}
+
+extension NewTaskIrregularTrackerViewController: UICollectionViewDataSource{
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return sections[section].element.count
+    }
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return sections.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let item = sections[indexPath.section].element[indexPath.item]
+        
+        switch item{
+        case .emoji(let emoji):
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: NewTaskIrregularTrackerCollectionViewCell.identifier,
+                for: indexPath
+            ) as? NewTaskIrregularTrackerCollectionViewCell else { return UICollectionViewCell() }
+            let isSelected = (selectedEmojiIndex == indexPath.item)
+            cell.configue(element: emoji, isSelected: isSelected)
+            return cell
+        case .color(let color):
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: NewTaskIrregularTrackerCollectionViewCell.identifier,
+                for: indexPath
+            ) as? NewTaskIrregularTrackerCollectionViewCell else { return UICollectionViewCell() }
+            let isSelected = (selectedColorIndex == indexPath.item)
+            cell.configue(with: color, isSelected: isSelected)
+            return cell
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        
+        guard kind == UICollectionView.elementKindSectionHeader,
+              let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: NewTaskIrregularTrackerSectionHeaderView.identifier,
+                for: indexPath
+              ) as? NewTaskIrregularTrackerSectionHeaderView else {
+            return UICollectionReusableView()
+        }
+        
+        let title = sections[indexPath.section].title
+        header.configure(with: title)
+        return header
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        switch indexPath.section{
+        case 0:
+            selectedEmojiIndex = indexPath.item
+        case 1:
+            selectedColorIndex = indexPath.item
+        default:
+            break
+        }
+        
+        collectionView.reloadData()
+    }
+}
+
+extension NewTaskIrregularTrackerViewController: UICollectionViewDelegateFlowLayout{
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let itemsPerRow: CGFloat = 6
+        let padding: CGFloat = 16
+        let sectionInset: CGFloat = 16
+        
+        let totalSpacing = padding * (itemsPerRow - 1) + sectionInset * 2
+        let width = (collectionView.bounds.width - totalSpacing) / itemsPerRow
+        return CGSize(width: width, height: width)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: collectionView.bounds.width, height: 40)
     }
 }

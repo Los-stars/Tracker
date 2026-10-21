@@ -15,10 +15,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        window = UIWindow()
-        window?.rootViewController = TrackerViewController()
-        window?.makeKeyAndVisible()
         return true
+    }
+    
+    func makeTrackerViewController() -> TrackerViewControllerPresenter {
+        let context = persistentContainer.viewContext
+        let vc = TrackerViewControllerPresenter()
+        vc.trackerStore = TrackerStore(context: context)
+        vc.trackerCategoryStore = TrackerCategoryStore(context: context)
+        vc.trackerRecordStore = TrackerRecordStore(context: context)
+        return vc
     }
 
     // MARK: UISceneSession Lifecycle

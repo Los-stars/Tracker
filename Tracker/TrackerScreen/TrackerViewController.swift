@@ -7,13 +7,12 @@
 
 import UIKit
 
-final class TrackerViewController: UIViewController {
-    
+final class TrackerViewController: UIViewController{
     var addTrackerIcon = UIButton()
     var trackerTextLabel = UILabel()
     var trackerDate = UIDatePicker()
     var searchTextField = UISearchBar()
-    private let presenter = TrackerViewControllerPresenter()
+    var presenter = TrackerViewControllerPresenter()
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -58,7 +57,10 @@ final class TrackerViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
+    
+//    var trackerStore: TrackerStore?
+//    var trackerCategoryStore: TrackerCategoryStore?
+//    var trackerRecordStore: TrackerRecordStore?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -72,7 +74,6 @@ final class TrackerViewController: UIViewController {
             layout.estimatedItemSize = .zero
         }
         
-        
         setupUIElements()
         setupPlaceolder()
         
@@ -81,7 +82,30 @@ final class TrackerViewController: UIViewController {
             self?.updatePlaceholderVisibility()
         }
         
-        presenter.setInitialData()
+        presenter.viewDidLoad()
+
+//        presenter.onRecordAdded = { [weak self] record in
+//            do { try self?.trackerRecordStore?.createTrackerRecord(trackerRecord: record) }
+//            catch { print("Record create error: \(error)") }
+//        }
+//        presenter.onRecordRemoved = { [weak self] record in
+//            do { try self?.trackerRecordStore?.deleteTrackerRecord(trackerRecord: record) }
+//            catch { print("Record delete error: \(error)") }
+//        }
+//        
+//        guard let trackerStore,
+//              let trackerCategoryStore,
+//              trackerRecordStore != nil else {
+//            print("Stores are not initialized")
+//            return
+//        }
+//        trackerStore.delegate = self
+//        do {
+//            try trackerCategoryStore.createDefaultCategoryIfNeeded()
+//            loadData()
+//        } catch {
+//            print("Core Data error: \(error)")
+//        }
     }
     func updatePlaceholderVisibility(){
         placeholderView.isHidden = presenter.hasVisibleTrackers()
@@ -142,6 +166,16 @@ final class TrackerViewController: UIViewController {
         addTrackerIcon.addTarget(self, action: #selector(addTask), for: .touchUpInside)
     }
     
+//    private func loadData() {
+//        guard let trackerStore, let trackerRecordStore else { return }
+//        do {
+//            let records = try trackerRecordStore.fetchTrackerRecord()
+//            presenter.setInitialData(categories: trackerStore.categories, records: records)
+//        } catch {
+//            print("Error loading trackers: \(error)")
+//        }
+//    }
+    
     func setupPlaceolder(){
         view.addSubview(placeholderView)
         placeholderView.addSubview(placeholderImageView)
@@ -170,6 +204,7 @@ final class TrackerViewController: UIViewController {
         let vc = ChooseTrackerTypeViewController()
         vc.title = "Создание трекера"
         vc.delegate = self
+        vc.trackerStore = presenter.trackerStore
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{
             sheet.detents = [.large()]
@@ -186,12 +221,12 @@ final class TrackerViewController: UIViewController {
 
 extension TrackerViewController: UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return presenter.numberOfVisibleTrackers()
+        return presenter.numberOfTrackers(in: section)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCollectionViewCell", for: indexPath) as? TrackerCollectionViewCell else { return UICollectionViewCell() }
-        let tracker = presenter.tracker(at: indexPath.row)
+        let tracker = presenter.tracker(at: indexPath)
         let trackerRecord = presenter.completedTrackersCount(id: tracker.id)
         let isCompleted = presenter.isTrackerCompleted(tracker, on: presenter.currentDate)
         cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: "\(trackerRecord)", isCompleted: isCompleted)
@@ -221,7 +256,9 @@ extension TrackerViewController: UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.bounds.width, height: 16)
+        return presenter.numberOfTrackers(in: section) == 0
+        ? .zero
+        : CGSize(width: collectionView.bounds.width, height: 16)
     }
 }
 
@@ -243,15 +280,10 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout{
     }
 }
 
-extension TrackerViewController: NewTaskTrackerDelegate{
-    func didCreateTracker(tracker: Tracker, category: String) {
-        presenter.addTracker(tracker, toCategory: category)
-        reloadUI()
-    }
-    
-    func reloadUI(){
-        collectionView.reloadData()
-        updatePlaceholderVisibility()
-    }
-}
+//extension TrackerViewController: TrackerStoreDelegate {
+//    func trackerStoreDidUpdate() { loadData() }
+//}
 
+extension TrackerViewController: NewTaskTrackerDelegate {
+    func didCreateTracker(tracker: Tracker, category: String) { }
+}

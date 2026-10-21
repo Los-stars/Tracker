@@ -8,49 +8,70 @@
 import Foundation
 
 final class TrackerViewControllerPresenter{
+    
     var categories: [TrackerCategory] = []
     var completedTrackers: [TrackerRecord] = []
     var currentDate: Date = Date()
     
     var onDataChanged: (() -> Void)?
+    var onRecordAdded: ((TrackerRecord) -> Void)?
+    var onRecordRemoved: ((TrackerRecord) -> Void)?
     
-    private var visibleTrackers: [Tracker] {
-        let weekday = Calendar.current.component(.weekday, from: currentDate)
-        let weekDay = WeekDay.from(calendarWeekday: weekday)
-        
-        return categories
-            .flatMap({ $0.trackers })
-            .filter({ tracker in
-                switch tracker.schedule{
-                case .everyday:
-                    return true
-                case .specific(let days):
-                    return days.contains(weekDay)
-                }
-            })
+    var trackerStore: TrackerStore?
+    var trackerCategoryStore: TrackerCategoryStore?
+    var trackerRecordStore: TrackerRecordStore?
+    
+//    private var visibleTrackers: [Tracker] {
+//        let weekday = Calendar.current.component(.weekday, from: currentDate)
+//        let weekDay = WeekDay.from(calendarWeekday: weekday)
+//        
+//        return categories
+//            .flatMap({ $0.trackers })
+//            .filter({ tracker in
+//                switch tracker.schedule{
+//                case .everyday:
+//                    return true
+//                case .specific(let days):
+//                    return days.contains(weekDay)
+//                }
+//            })
+//    }
+    
+    func setInitialData(
+        categories: [TrackerCategory],
+        records: [TrackerRecord]
+    ) {
+        self.categories = categories
+        self.completedTrackers = records
+
+        onDataChanged?()
     }
     
-    func setInitialData() {
-        let today = Calendar.current.component(.weekday, from: Date())
-        let weekDay = WeekDay.from(calendarWeekday: today)
-        let tracker = Tracker(title: "hello", color: .green, emoji: "😪", schedule: .specific([weekDay]))
-        addTracker(tracker, toCategory: "Домашний уют")
+    func viewDidLoad(){
+        guard let trackerStore,
+              let trackerCategoryStore,
+              trackerRecordStore != nil else {
+            print("Stores are not initialized")
+            return
+        }
+        trackerStore.delegate = self
+        do {
+            try trackerCategoryStore.createDefaultCategoryIfNeeded()
+            loadData()
+        } catch {
+            print("Core Data error: \(error)")
+        }
     }
     
     func numberOfCatogories() -> Int{
         categories.count
     }
-    
-    func numberOfVisibleTrackers() -> Int{
-        visibleTrackers.count
-    }
-    
-    func tracker(at index: Int) -> Tracker{
-        visibleTrackers[index]
-    }
-    
+
     func hasVisibleTrackers() -> Bool{
-        !visibleTrackers.isEmpty
+        categories.indices.contains { section in
+            !trackers(in: section).isEmpty
+            
+        }
     }
     
     func isTrackerCompleted(_ tracker: Tracker, on date: Date) -> Bool {
@@ -66,12 +87,13 @@ final class TrackerViewControllerPresenter{
             
         guard target <= today else { return }
         
+        let record = TrackerRecord(trackerId: tracker.id, date: target)
         if isTrackerCompleted(tracker, on: date) {
             completedTrackers.removeAll {
                 $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: date)
             }
         } else {
-            completedTrackers.append(TrackerRecord(trackerId: tracker.id, date: date))
+            completedTrackers.append(record)
         }
         onDataChanged?()
     }
@@ -103,5 +125,48 @@ final class TrackerViewControllerPresenter{
     func updateDate(date: Date){
         currentDate = date
         onDataChanged?()
+    }
+    
+    private func trackers(in section: Int) -> [Tracker] {
+        guard categories.indices.contains(section) else { return [] }
+        let weekday = Calendar.current.component(.weekday, from: currentDate)
+        let weekDay = WeekDay.from(calendarWeekday: weekday)
+        return categories[section].trackers.filter { tracker in
+            switch tracker.schedule {
+            case .everyday: return true
+            case .specific(let days): return days.contains(weekDay)
+            }
+        }
+    }
+
+    func numberOfTrackers(in section: Int) -> Int {
+        trackers(in: section).count
+    }
+
+    func tracker(at indexPath: IndexPath) -> Tracker {
+        trackers(in: indexPath.section)[indexPath.item]
+    }
+    
+    private func loadData() {
+        guard let trackerStore, let trackerRecordStore else { return }
+        do {
+            let records = try trackerRecordStore.fetchTrackerRecord()
+            setInitialData(categories: trackerStore.categories, records: records)
+        } catch {
+            print("Error loading trackers: \(error)")
+        }
+    }
+}
+
+
+extension TrackerViewControllerPresenter: TrackerStoreDelegate {
+    func trackerStoreDidUpdate() {
+        print("TrackerStore updated")
+        print("Categories before:", categories.count)
+        print("Categories in Store:", trackerStore?.categories.count ?? -1)
+        
+        loadData()
+        
+        print("Categories after:", categories.count)
     }
 }

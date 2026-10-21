@@ -15,9 +15,22 @@ final class TrackerRecordStore{
     }
     
     func createTrackerRecord(trackerRecord object: TrackerRecord) throws{
+        let trackerRequest = TrackerCoreData.fetchRequest()
+        trackerRequest.fetchLimit = 1
+        trackerRequest.predicate = NSPredicate(
+            format: "id == %@",
+            object.trackerId as CVarArg
+        )
+        
+        guard let trackerCoreData = try context.fetch(trackerRequest).first else {
+            return
+        }
+        
         let trackerRecord = TrackerRecordCoreData(context: context)
         trackerRecord.trackerId = object.trackerId
         trackerRecord.date = object.date
+        
+        trackerRecord.tracker = trackerCoreData
         try context.save()
     }
     

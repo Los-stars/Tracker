@@ -109,6 +109,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         return stackView
     }()
 
+    var trackerStore: TrackerStore?
     var delegate: NewTaskTrackerDelegate?
     private let presenter = NewTaskIrregularTrackerViewControllerPresenter()
     var menuTableViewItem = ["Категория"]
@@ -186,8 +187,15 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         let selectedEmoji = emojiItem[emojiIndex]
         let selectedColor = colorItem[colorIndex]
         let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: Schedule.everyday)
-        delegate?.didCreateTracker(tracker: tracker, category: "Домашний уют")
-        dismiss(animated: true)
+        let category = TrackerCategory(title: "Домашний уют", trackers: [])
+        do {
+            guard let trackerStore else { return }
+            try trackerStore.saveTracker(tracker: tracker, category: category)
+            delegate?.didCreateTracker(tracker: tracker, category: category.title)
+            dismiss(animated: true)
+        } catch {
+            print("Error saving tracker: \(error)")
+        }
     }
 }
 

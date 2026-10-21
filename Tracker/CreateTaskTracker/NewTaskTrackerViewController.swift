@@ -108,7 +108,8 @@ final class NewTaskTrackerViewController: UIViewController{
         
         return stackView
     }()
-
+    
+    var trackerStore: TrackerStore?
     var delegate: NewTaskTrackerDelegate?
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
@@ -188,8 +189,17 @@ final class NewTaskTrackerViewController: UIViewController{
         let selectedEmoji = emojiItem[emojiIndex]
         let selectedColor = colorItem[colorIndex]
         let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: schedule)
-        delegate?.didCreateTracker(tracker: tracker, category: "Домашний уют")
-        dismiss(animated: true)
+        
+        let categories = TrackerCategory(title: "Домашний уют", trackers: [])
+        do{
+            guard let trackerStore = trackerStore else { return }
+            try trackerStore.saveTracker(tracker: tracker, category: categories)
+            delegate?.didCreateTracker(tracker: tracker, category: categories.title)
+            dismiss(animated: true)
+        }
+        catch{
+            print("Error saving tracker: \(error)")
+        }
     }
 }
 

@@ -115,9 +115,6 @@ final class NewTaskTrackerViewController: UIViewController{
     private var selectedColorIndex: Int?
     private let presenter = NewTaskTrackerViewControllerPresenter()
     var menuTableViewItem = ["Категория","Расписание"]
-    let emojiItem: [String] = ["🙂", "😻", "🌺", "🐶", "❤️", "😱",
-                     "😇", "😡", "🥶", "🤔", "🙌", "🍔",
-                     "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
     let colorItem: [UIColor] = [.colorSection1, .colorSection2, .colorSection3, .colorSection4,
                                 .colorSection5, .colorSection6, .colorSection7, .colorSection8,
                                 .colorSection9, .colorSection10, .colorSection11, .colorSection12,
@@ -283,7 +280,7 @@ extension NewTaskTrackerViewController: UICollectionViewDataSource{
                 for: indexPath
             ) as? NewTaskTrackerCollectionViewCell else { return UICollectionViewCell() }
             let isSelected = (selectedEmojiIndex == indexPath.item)
-            cell.configue(element: emoji, isSelected: isSelected)
+            cell.configure(element: emoji, isSelected: isSelected)
             return cell
         case .color(let color):
             guard let cell = collectionView.dequeueReusableCell(
@@ -291,7 +288,7 @@ extension NewTaskTrackerViewController: UICollectionViewDataSource{
                 for: indexPath
             ) as? NewTaskTrackerCollectionViewCell else { return UICollectionViewCell() }
             let isSelected = (selectedColorIndex == indexPath.item)
-            cell.configue(with: color, isSelected: isSelected)
+            cell.configure(with: color, isSelected: isSelected)
             return cell
         }
     }

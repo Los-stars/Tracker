@@ -113,9 +113,6 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     var delegate: NewTaskTrackerDelegate?
     private let presenter = NewTaskIrregularTrackerViewControllerPresenter()
     var menuTableViewItem = ["Категория"]
-    let emojiItem: [String] = ["🙂", "😻", "🌺", "🐶", "❤️", "😱",
-                     "😇", "😡", "🥶", "🤔", "🙌", "🍔",
-                     "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
     let colorItem: [UIColor] = [.colorSection1, .colorSection2, .colorSection3, .colorSection4,
                                 .colorSection5, .colorSection6, .colorSection7, .colorSection8,
                                 .colorSection9, .colorSection10, .colorSection11, .colorSection12,
@@ -181,8 +178,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     
     @objc private func didTapCreateButton(){
         guard let title = nameTrackerTextField.text else { return }
-        guard let emojiIndex = selectedEmojiIndex else { return }
-        guard let colorIndex = selectedColorIndex else { return }
+        guard let emojiIndex = selectedEmojiIndex, let colorIndex = selectedColorIndex else { return }
         
         let selectedEmoji = emojiItem[emojiIndex]
         let selectedColor = colorItem[colorIndex]
@@ -241,11 +237,11 @@ extension NewTaskIrregularTrackerViewController: UITableViewDelegate{
 
 extension NewTaskIrregularTrackerViewController: UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return sections[section].element.count
+        sections[section].element.count
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return sections.count
+        sections.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

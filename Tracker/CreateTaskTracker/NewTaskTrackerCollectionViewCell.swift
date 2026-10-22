@@ -66,7 +66,7 @@ final class NewTaskTrackerCollectionViewCell: UICollectionViewCell{
         ])
     }
     
-    func configue(element: String, isSelected: Bool){
+    func configure(element: String, isSelected: Bool){
         elementLabel.isHidden = false
         elementLabel.text = element
         colorView.isHidden = true
@@ -78,7 +78,7 @@ final class NewTaskTrackerCollectionViewCell: UICollectionViewCell{
         backgroundColor = isSelected ? UIColor.customLightGray : UIColor.clear
     }
     
-    func configue(with color: UIColor, isSelected: Bool){
+    func configure(with color: UIColor, isSelected: Bool){
         elementLabel.isHidden = true
         elementLabel.text = nil
         colorView.isHidden = false

@@ -58,9 +58,6 @@ final class TrackerViewController: UIViewController{
         return label
     }()
     
-//    var trackerStore: TrackerStore?
-//    var trackerCategoryStore: TrackerCategoryStore?
-//    var trackerRecordStore: TrackerRecordStore?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -83,29 +80,6 @@ final class TrackerViewController: UIViewController{
         }
         
         presenter.viewDidLoad()
-
-//        presenter.onRecordAdded = { [weak self] record in
-//            do { try self?.trackerRecordStore?.createTrackerRecord(trackerRecord: record) }
-//            catch { print("Record create error: \(error)") }
-//        }
-//        presenter.onRecordRemoved = { [weak self] record in
-//            do { try self?.trackerRecordStore?.deleteTrackerRecord(trackerRecord: record) }
-//            catch { print("Record delete error: \(error)") }
-//        }
-//        
-//        guard let trackerStore,
-//              let trackerCategoryStore,
-//              trackerRecordStore != nil else {
-//            print("Stores are not initialized")
-//            return
-//        }
-//        trackerStore.delegate = self
-//        do {
-//            try trackerCategoryStore.createDefaultCategoryIfNeeded()
-//            loadData()
-//        } catch {
-//            print("Core Data error: \(error)")
-//        }
     }
     func updatePlaceholderVisibility(){
         placeholderView.isHidden = presenter.hasVisibleTrackers()
@@ -166,16 +140,6 @@ final class TrackerViewController: UIViewController{
         addTrackerIcon.addTarget(self, action: #selector(addTask), for: .touchUpInside)
     }
     
-//    private func loadData() {
-//        guard let trackerStore, let trackerRecordStore else { return }
-//        do {
-//            let records = try trackerRecordStore.fetchTrackerRecord()
-//            presenter.setInitialData(categories: trackerStore.categories, records: records)
-//        } catch {
-//            print("Error loading trackers: \(error)")
-//        }
-//    }
-    
     func setupPlaceolder(){
         view.addSubview(placeholderView)
         placeholderView.addSubview(placeholderImageView)
@@ -214,6 +178,7 @@ final class TrackerViewController: UIViewController{
     }
     
     @objc private func dateChanged(){
+        presenter.viewDidLoad()
         presenter.updateDate(date: trackerDate.date)
     }
 }
@@ -279,10 +244,6 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout{
         return UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
     }
 }
-
-//extension TrackerViewController: TrackerStoreDelegate {
-//    func trackerStoreDidUpdate() { loadData() }
-//}
 
 extension TrackerViewController: NewTaskTrackerDelegate {
     func didCreateTracker(tracker: Tracker, category: String) { }

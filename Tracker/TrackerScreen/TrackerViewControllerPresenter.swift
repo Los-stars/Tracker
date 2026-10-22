@@ -20,22 +20,7 @@ final class TrackerViewControllerPresenter{
     var trackerStore: TrackerStore?
     var trackerCategoryStore: TrackerCategoryStore?
     var trackerRecordStore: TrackerRecordStore?
-    
-//    private var visibleTrackers: [Tracker] {
-//        let weekday = Calendar.current.component(.weekday, from: currentDate)
-//        let weekDay = WeekDay.from(calendarWeekday: weekday)
-//        
-//        return categories
-//            .flatMap({ $0.trackers })
-//            .filter({ tracker in
-//                switch tracker.schedule{
-//                case .everyday:
-//                    return true
-//                case .specific(let days):
-//                    return days.contains(weekDay)
-//                }
-//            })
-//    }
+
     
     func setInitialData(
         categories: [TrackerCategory],
@@ -86,16 +71,25 @@ final class TrackerViewControllerPresenter{
         let target = calendar.startOfDay(for: date)
             
         guard target <= today else { return }
+        guard let trackerRecordStore else { return }
         
         let record = TrackerRecord(trackerId: tracker.id, date: target)
-        if isTrackerCompleted(tracker, on: date) {
-            completedTrackers.removeAll {
-                $0.trackerId == tracker.id && Calendar.current.isDate($0.date, inSameDayAs: date)
+        
+        do{
+            if isTrackerCompleted(tracker, on: date) {
+                try trackerRecordStore.deleteTrackerRecord(trackerRecord: record)
+            } else {
+                try trackerRecordStore.createTrackerRecord(trackerRecord: record)
             }
-        } else {
-            completedTrackers.append(record)
+            
+            let trackerRecordStoreFetch = try trackerRecordStore.fetchTrackerRecord()
+            
+            completedTrackers = trackerRecordStoreFetch
+            onDataChanged?()
         }
-        onDataChanged?()
+        catch{
+            print("Core Data error: \(error)")
+        }
     }
     
     func addTracker(_ tracker: Tracker, toCategory categoryTitle: String) {
@@ -161,12 +155,6 @@ final class TrackerViewControllerPresenter{
 
 extension TrackerViewControllerPresenter: TrackerStoreDelegate {
     func trackerStoreDidUpdate() {
-        print("TrackerStore updated")
-        print("Categories before:", categories.count)
-        print("Categories in Store:", trackerStore?.categories.count ?? -1)
-        
         loadData()
-        
-        print("Categories after:", categories.count)
     }
 }

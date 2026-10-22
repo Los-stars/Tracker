@@ -7,13 +7,12 @@
 
 import UIKit
 
-final class TrackerViewController: UIViewController {
-    
+final class TrackerViewController: UIViewController{
     var addTrackerIcon = UIButton()
     var trackerTextLabel = UILabel()
     var trackerDate = UIDatePicker()
     var searchTextField = UISearchBar()
-    private let presenter = TrackerViewControllerPresenter()
+    var presenter = TrackerViewControllerPresenter()
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -58,7 +57,7 @@ final class TrackerViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -72,7 +71,6 @@ final class TrackerViewController: UIViewController {
             layout.estimatedItemSize = .zero
         }
         
-        
         setupUIElements()
         setupPlaceolder()
         
@@ -81,7 +79,7 @@ final class TrackerViewController: UIViewController {
             self?.updatePlaceholderVisibility()
         }
         
-        presenter.setInitialData()
+        presenter.viewDidLoad()
     }
     func updatePlaceholderVisibility(){
         placeholderView.isHidden = presenter.hasVisibleTrackers()
@@ -170,6 +168,7 @@ final class TrackerViewController: UIViewController {
         let vc = ChooseTrackerTypeViewController()
         vc.title = "Создание трекера"
         vc.delegate = self
+        vc.trackerStore = presenter.trackerStore
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{
             sheet.detents = [.large()]
@@ -179,6 +178,7 @@ final class TrackerViewController: UIViewController {
     }
     
     @objc private func dateChanged(){
+        presenter.viewDidLoad()
         presenter.updateDate(date: trackerDate.date)
     }
 }
@@ -186,12 +186,12 @@ final class TrackerViewController: UIViewController {
 
 extension TrackerViewController: UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return presenter.numberOfVisibleTrackers()
+        return presenter.numberOfTrackers(in: section)
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCollectionViewCell", for: indexPath) as? TrackerCollectionViewCell else { return UICollectionViewCell() }
-        let tracker = presenter.tracker(at: indexPath.row)
+        let tracker = presenter.tracker(at: indexPath)
         let trackerRecord = presenter.completedTrackersCount(id: tracker.id)
         let isCompleted = presenter.isTrackerCompleted(tracker, on: presenter.currentDate)
         cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: "\(trackerRecord)", isCompleted: isCompleted)
@@ -221,7 +221,9 @@ extension TrackerViewController: UICollectionViewDataSource{
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.bounds.width, height: 16)
+        return presenter.numberOfTrackers(in: section) == 0
+        ? .zero
+        : CGSize(width: collectionView.bounds.width, height: 16)
     }
 }
 
@@ -243,15 +245,6 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout{
     }
 }
 
-extension TrackerViewController: NewTaskTrackerDelegate{
-    func didCreateTracker(tracker: Tracker, category: String) {
-        presenter.addTracker(tracker, toCategory: category)
-        reloadUI()
-    }
-    
-    func reloadUI(){
-        collectionView.reloadData()
-        updatePlaceholderVisibility()
-    }
+extension TrackerViewController: NewTaskTrackerDelegate {
+    func didCreateTracker(tracker: Tracker, category: String) { }
 }
-

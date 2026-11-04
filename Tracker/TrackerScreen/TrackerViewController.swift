@@ -13,7 +13,6 @@ final class TrackerViewController: UIViewController{
     var trackerDate = UIDatePicker()
     var searchTextField = UISearchBar()
     var presenter = TrackerViewControllerPresenter()
-    
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -168,6 +167,7 @@ final class TrackerViewController: UIViewController{
         let vc = ChooseTrackerTypeViewController()
         vc.title = "Создание трекера"
         vc.delegate = self
+        vc.trackerCategoryStore = presenter.trackerCategoryStore
         vc.trackerStore = presenter.trackerStore
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{

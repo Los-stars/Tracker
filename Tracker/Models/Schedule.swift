@@ -5,7 +5,7 @@
 //  Created by Amir on 01.10.2026.
 //
 
-enum Schedule{
+enum Schedule: Codable, Equatable{
     case everyday
     case specific([WeekDay])
 }

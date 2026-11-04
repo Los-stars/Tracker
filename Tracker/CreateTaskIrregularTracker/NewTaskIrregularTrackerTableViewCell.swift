@@ -8,7 +8,7 @@
 import UIKit
 
 class NewTaskIrregularTrackerTableViewCell: UITableViewCell {
-    static let identifier = "NewTaskTrackerTableViewCell"
+    static let identifier = "NewTaskIrregularTrackerTableViewCell"
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)

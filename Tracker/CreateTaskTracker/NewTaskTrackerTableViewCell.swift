@@ -7,7 +7,7 @@
 
 import UIKit
 
-class NewTaskTrackerTableViewCell: UITableViewCell {
+final class NewTaskTrackerTableViewCell: UITableViewCell {
     static let identifier = "NewTaskTrackerTableViewCell"
     private let titleLabel: UILabel = {
         let label = UILabel()

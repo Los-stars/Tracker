@@ -110,6 +110,9 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     }()
 
     var trackerStore: TrackerStore?
+    var trackerCategoryStore: TrackerCategoryStore?
+    private var selectedCategory: String?
+    
     var delegate: NewTaskTrackerDelegate?
     private let presenter = NewTaskIrregularTrackerViewControllerPresenter()
     var menuTableViewItem = ["Категория"]
@@ -139,6 +142,11 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
     }
     
     func updateCreateButtonState(){
+        let hasTitle = !(nameTrackerTextField.text ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+        createButton.isEnabled = hasTitle
+        && selectedCategory != nil
+        && selectedEmojiIndex != nil
+        && selectedColorIndex != nil
         createButton.backgroundColor = createButton.isEnabled ? .blackDay : .customGray
     }
     
@@ -182,8 +190,12 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         
         let selectedEmoji = emojiItem[emojiIndex]
         let selectedColor = colorItem[colorIndex]
-        let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: Schedule.everyday)
-        let category = TrackerCategory(title: "Домашний уют", trackers: [])
+        let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: .everyday)
+        
+        guard let categoryTitle = selectedCategory else { return }
+        
+        
+        let category = TrackerCategory(title: categoryTitle, trackers: [])
         do {
             guard let trackerStore else { return }
             try trackerStore.saveTracker(tracker: tracker, category: category)
@@ -204,7 +216,7 @@ extension NewTaskIrregularTrackerViewController: UITableViewDataSource{
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "NewTaskIrregularTrackerTableViewCell") as? NewTaskIrregularTrackerTableViewCell else { return UITableViewCell() }
         
         if indexPath.row == 0{
-            cell.configure(with: menuTableViewItem[indexPath.row], subtitle: nil)
+            cell.configure(with: menuTableViewItem[indexPath.row], subtitle: selectedCategory)
         }else{
             cell.configure(with: menuTableViewItem[indexPath.row], subtitle: presenter.scheduleSubtitle)
         }
@@ -222,15 +234,45 @@ extension NewTaskIrregularTrackerViewController: UITextFieldDelegate{
         guard let stringRange = Range(range, in: currentText) else { return false }
         let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
         
-        limitLabel.isHidden = presenter.checkTextRange(to: updatedText)
-        return presenter.checkTextRange(to: updatedText)
+        let isAllowed = presenter.checkTextRange(to: updatedText)
+        limitLabel.isHidden = isAllowed
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.updateCreateButtonState()
+        }
+        return isAllowed
     }
 }
 
 extension NewTaskIrregularTrackerViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == 0{
-            print("Tap Category")
+            guard let trackerCategoryStore else {
+                print("trackerCategoryStore == nil")
+                return
+            }
+            
+            let vc = CategoryViewController()
+            vc.title = "Категория"
+            vc.viewModel = CategoryViewModel(
+                store: trackerCategoryStore,
+                selectedCategory: selectedCategory
+            )
+            
+            vc.onCategorySelected = { [weak self] title in
+                guard let self else { return }
+                self.selectedCategory = title
+                self.menuTableView.reloadData()
+                self.updateCreateButtonState()
+            }
+            
+            let navVC = UINavigationController(rootViewController: vc)
+            if let sheet = navVC.sheetPresentationController {
+                sheet.detents = [.large()]
+                sheet.prefersGrabberVisible = true
+            }
+            
+            present(navVC, animated: true)
         }
     }
 }
@@ -295,6 +337,7 @@ extension NewTaskIrregularTrackerViewController: UICollectionViewDataSource{
         }
         
         collectionView.reloadData()
+        updateCreateButtonState()
     }
 }
 

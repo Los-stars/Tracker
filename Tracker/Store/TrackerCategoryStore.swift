@@ -8,11 +8,47 @@
 import CoreData
 import UIKit
 
-final class TrackerCategoryStore{
+protocol TrackerCategoryStoreProtocol {
+    func fetchCategoryTitles() throws -> [String]
+    func createCategory(title: String) throws
+    func deleteCategory(title: String) throws
+    func updateCategory(oldTitle: String, newTitle: String) throws
+}
+
+final class TrackerCategoryStore: TrackerCategoryStoreProtocol{
     private let context: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {
         self.context = context
+    }
+    
+    func fetchCategoryTitles() throws -> [String]{
+        let request = TrackerCategoryCoreData.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        return try context.fetch(request).compactMap({ $0.title })
+    }
+    
+    func createCategory(title: String) throws{
+        guard try fetchCategoryCoreData(with: title) == nil else { return }
+        let category = TrackerCategoryCoreData(context: context)
+        category.title = title
+        try context.save()
+    }
+    
+    func deleteCategory(title: String) throws{
+        guard let category = try fetchCategoryCoreData(with: title) else { return }
+        context.delete(category)
+        try context.save()
+    }
+    
+    func updateCategory(oldTitle: String, newTitle: String) throws {
+        guard oldTitle != newTitle else { return }
+        guard try fetchCategoryCoreData(with: newTitle) == nil else {
+            return
+        }
+        guard let category = try fetchCategoryCoreData(with: oldTitle) else { return }
+        category.title = newTitle
+        try context.save()
     }
     
     func createTrackerCategory(trackerCategory object: TrackerCategory) throws{
@@ -56,6 +92,13 @@ final class TrackerCategoryStore{
 
         context.delete(category)
         try context.save()
+    }
+    
+    private func fetchCategoryCoreData(with title: String) throws -> TrackerCategoryCoreData? {
+        let request = TrackerCategoryCoreData.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "title == %@", title)
+        return try context.fetch(request).first
     }
     
     private func makeTrackerCategory(_ object: TrackerCategoryCoreData) -> TrackerCategory?{

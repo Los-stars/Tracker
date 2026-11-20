@@ -54,6 +54,7 @@ class ChooseTrackerTypeViewController: UIViewController {
     
     weak var delegate: NewTaskTrackerDelegate?
     var trackerStore: TrackerStore?
+    var trackerCategoryStore: TrackerCategoryStore?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .whiteDay
@@ -77,6 +78,7 @@ class ChooseTrackerTypeViewController: UIViewController {
         vc.title = "Новая привычка"
         vc.delegate = self
         vc.trackerStore = trackerStore
+        vc.trackerCategoryStore = trackerCategoryStore
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{
             sheet.detents = [.large()]
@@ -90,6 +92,7 @@ class ChooseTrackerTypeViewController: UIViewController {
         vc.title = "Новое нерегулярное событие"
         vc.delegate = self
         vc.trackerStore = trackerStore
+        vc.trackerCategoryStore = trackerCategoryStore
         let navVC = UINavigationController(rootViewController: vc)
         if let sheet = navVC.sheetPresentationController{
             sheet.detents = [.large()]

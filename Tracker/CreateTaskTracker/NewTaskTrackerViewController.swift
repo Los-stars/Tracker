@@ -110,6 +110,9 @@ final class NewTaskTrackerViewController: UIViewController{
     }()
     
     var trackerStore: TrackerStore?
+    var trackerCategoryStore: TrackerCategoryStore?
+    private var selectedCategory: String?
+    
     var delegate: NewTaskTrackerDelegate?
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
@@ -140,6 +143,12 @@ final class NewTaskTrackerViewController: UIViewController{
     }
     
     func updateCreateButtonState(){
+        let hasTitle = !(nameTrackerTextField.text ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+        createButton.isEnabled = hasTitle
+        && selectedCategory != nil
+        && presenter.selectedDaysNotEmpty()
+        && selectedEmojiIndex != nil
+        && selectedColorIndex != nil
         createButton.backgroundColor = createButton.isEnabled ? .blackDay : .customGray
     }
     
@@ -187,11 +196,14 @@ final class NewTaskTrackerViewController: UIViewController{
         let selectedColor = colorItem[colorIndex]
         let tracker = Tracker(title: title, color: selectedColor, emoji: selectedEmoji, schedule: schedule)
         
-        let categories = TrackerCategory(title: "Домашний уют", trackers: [])
+        guard let categoryTitle = selectedCategory else { return }
+        
+        
+        let category = TrackerCategory(title: categoryTitle, trackers: [])
         do{
             guard let trackerStore = trackerStore else { return }
-            try trackerStore.saveTracker(tracker: tracker, category: categories)
-            delegate?.didCreateTracker(tracker: tracker, category: categories.title)
+            try trackerStore.saveTracker(tracker: tracker, category: category)
+            delegate?.didCreateTracker(tracker: tracker, category: category.title)
             dismiss(animated: true)
         }
         catch{
@@ -209,7 +221,7 @@ extension NewTaskTrackerViewController: UITableViewDataSource{
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "NewTaskTrackerTableViewCell") as? NewTaskTrackerTableViewCell else { return UITableViewCell() }
         
         if indexPath.row == 0{
-            cell.configure(with: menuTableViewItem[indexPath.row], subtitle: nil)
+            cell.configure(with: menuTableViewItem[indexPath.row], subtitle: selectedCategory)
         }else{
             cell.configure(with: menuTableViewItem[indexPath.row], subtitle: presenter.scheduleSubtitle)
         }
@@ -227,15 +239,58 @@ extension NewTaskTrackerViewController: UITextFieldDelegate{
         guard let stringRange = Range(range, in: currentText) else { return false }
         let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
         
-        limitLabel.isHidden = presenter.checkTextRange(to: updatedText)
-        return presenter.checkTextRange(to: updatedText)
+        let isAllowed = presenter.checkTextRange(to: updatedText)
+        limitLabel.isHidden = isAllowed
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.updateCreateButtonState()
+        }
+        return isAllowed
     }
 }
 
 extension NewTaskTrackerViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == 0{
-            print("Tap Category")
+            guard let trackerCategoryStore else {
+                print("trackerCategoryStore == nil")
+                return
+            }
+            
+            let vc = CategoryViewController()
+            vc.title = "Категория"
+            vc.viewModel = CategoryViewModel(
+                store: trackerCategoryStore,
+                selectedCategory: selectedCategory
+            )
+            
+            vc.onCategorySelected = { [weak self] title in
+                guard let self else { return }
+                self.selectedCategory = title
+                self.menuTableView.reloadData()
+                self.updateCreateButtonState()
+            }
+            
+            vc.viewModel?.onSelectedCategoryDeleted = { [weak self] in
+                guard let self else { return }
+                self.selectedCategory = nil
+                self.menuTableView.reloadData()
+                self.updateCreateButtonState()
+            }
+            
+            vc.viewModel?.onSelectedCategoryRenamed = { [weak self] newTitle in
+                guard let self else { return }
+                self.selectedCategory = newTitle
+                self.menuTableView.reloadData()
+            }
+            
+            let navVC = UINavigationController(rootViewController: vc)
+            if let sheet = navVC.sheetPresentationController {
+                sheet.detents = [.large()]
+                sheet.prefersGrabberVisible = true
+            }
+            
+            present(navVC, animated: true)
         }else{
             let vc = ScheduleTrackerViewController()
             vc.title = "Расписание"
@@ -246,9 +301,6 @@ extension NewTaskTrackerViewController: UITableViewDelegate{
                 self.presenter.updateSchedule(days)
                 self.menuTableView.reloadData()
                 
-                if presenter.selectedDaysNotEmpty(){
-                    self.createButton.isEnabled = true
-                }
                 updateCreateButtonState()
             }
             let navVC = UINavigationController(rootViewController: vc)
@@ -321,6 +373,7 @@ extension NewTaskTrackerViewController: UICollectionViewDataSource{
         }
         
         collectionView.reloadData()
+        updateCreateButtonState()
     }
 }
 

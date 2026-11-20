@@ -57,9 +57,31 @@ final class TrackerViewController: UIViewController{
         return label
     }()
     
+    private lazy var filterButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(NSLocalizedString("filters", comment: ""), for: .normal)
+        button.setTitleColor(.customWhite, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
+        button.backgroundColor = .customBlue
+        button.layer.cornerRadius = 16
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(didTapFilter), for: .touchUpInside)
+        return button
+    }()
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        AnalyticsService.shared.report(event: .open, screen: .main)
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        AnalyticsService.shared.report(event: .close, screen: .main)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .whiteDay
         
         navigationController?.setNavigationBarHidden(true, animated: false)
         
@@ -93,7 +115,7 @@ final class TrackerViewController: UIViewController{
         addTrackerIcon.tintColor = .blackDay
         addTrackerIcon.translatesAutoresizingMaskIntoConstraints = false
         
-        trackerTextLabel.text = "Трекеры"
+        trackerTextLabel.text = NSLocalizedString("trackers", comment: "")
         trackerTextLabel.font = .systemFont(ofSize: 34, weight: .bold)
         trackerTextLabel.translatesAutoresizingMaskIntoConstraints = false
         trackerTextLabel.tintColor = .blackDay
@@ -116,6 +138,7 @@ final class TrackerViewController: UIViewController{
         view.addSubview(trackerTextLabel)
         view.addSubview(searchTextField)
         view.addSubview(collectionView)
+        view.addSubview(filterButton)
         
                 
         NSLayoutConstraint.activate([
@@ -130,13 +153,41 @@ final class TrackerViewController: UIViewController{
             searchTextField.topAnchor.constraint(equalTo: trackerTextLabel.bottomAnchor, constant: 7),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filterButton.widthAnchor.constraint(equalToConstant: 114),
+            filterButton.heightAnchor.constraint(equalToConstant: 50),
             collectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 10),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
+        collectionView.contentInset.bottom = 50 + 16 + 16
+        
         addTrackerIcon.addTarget(self, action: #selector(addTask), for: .touchUpInside)
+    }
+    
+    @objc func didTapFilter(){
+        AnalyticsService.shared.report(event: .click, screen: .main, item: .filter)
+        
+        let vc = FilterViewController()
+        vc.title = "Фильтры"
+        vc.selectedFilter = presenter.currentFilter
+        vc.onFilterSelected = { [weak self] filter in
+            guard let self else { return }
+            presenter.currentFilter = filter
+            if filter == .current{
+                trackerDate.setDate(Date(), animated: true)
+            }
+            presenter.apply(filter: filter)
+        }
+        let navVC = UINavigationController(rootViewController: vc)
+        if let sheet = navVC.sheetPresentationController{
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(navVC, animated: true)
     }
     
     func setupPlaceolder(){
@@ -164,6 +215,8 @@ final class TrackerViewController: UIViewController{
     }
     
     @objc func addTask(){
+        AnalyticsService.shared.report(event: .click, screen: .main, item: .addTrack)
+        
         let vc = ChooseTrackerTypeViewController()
         vc.title = "Создание трекера"
         vc.delegate = self
@@ -194,10 +247,58 @@ extension TrackerViewController: UICollectionViewDataSource{
         let tracker = presenter.tracker(at: indexPath)
         let trackerRecord = presenter.completedTrackersCount(id: tracker.id)
         let isCompleted = presenter.isTrackerCompleted(tracker, on: presenter.currentDate)
-        cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: "\(trackerRecord)", isCompleted: isCompleted)
+        let daysText = String.localizedStringWithFormat(
+            NSLocalizedString("numberOfDays", tableName: "LocalizableDict", comment: ""),
+            trackerRecord
+        )
+        cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: daysText, isCompleted: isCompleted)
         cell.onDoneButtonTapped = { [weak self] in
             guard let self else { return }
+            AnalyticsService.shared.report(event: .click, screen: .main, item: .track)
             presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
+        }
+        
+        cell.onPinTapped = { [weak self] in
+            guard let self else { return }
+            print("Закрепить: \(tracker.title)")
+        }
+        
+        cell.onEditTapped = { [weak self] in
+            guard let self else { return }
+            
+            AnalyticsService.shared.report(event: .click, screen: .main, item: .edit)
+            
+            let vc = EditTrackerViewController(tracker: tracker, category: presenter.categories[indexPath.section].title, completedDay: trackerRecord)
+            vc.title = "Редактирование привычки"
+            vc.trackerCategoryStore = presenter.trackerCategoryStore
+            let navVC = UINavigationController(rootViewController: vc)
+            if let sheet = navVC.sheetPresentationController{
+                sheet.detents = [.large()]
+                sheet.prefersGrabberVisible = true
+            }
+            
+            vc.onSave = { [weak self] updatedTracker, category in
+                self?.presenter.updateTracker(updatedTracker, category: category)
+            }
+            
+            present(navVC, animated: true)
+        }
+        
+        cell.onDeleteTapped = { [weak self] in
+            guard let self else { return }
+            
+            AnalyticsService.shared.report(event: .click, screen: .main, item: .delete)
+            
+            let alert = UIAlertController(
+                title: "Уверены что хотите удалить трекер?",
+                message: nil,
+                preferredStyle: .actionSheet
+            )
+            alert.addAction(UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+                self?.presenter.deleteTracker(tracker)
+            })
+            alert.addAction(UIAlertAction(title: "Отменить", style: .cancel))
+            present(alert, animated: true)
         }
         return cell
     }

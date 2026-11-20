@@ -14,6 +14,7 @@ final class ScheduleTrackerViewController: UIViewController{
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = .clear
+        tableView.separatorColor = .customGray
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.register(ScheduleTrackerViewCell.self, forCellReuseIdentifier: ScheduleTrackerViewCell.identifier)
         return tableView
@@ -36,7 +37,7 @@ final class ScheduleTrackerViewController: UIViewController{
     
     var selectedDays: Set<WeekDay> = []
     override func viewDidLoad() {
-        view.backgroundColor = .white
+        view.backgroundColor = .whiteDay
         scheduleTableView.dataSource = self
         scheduleTableView.delegate = self
         

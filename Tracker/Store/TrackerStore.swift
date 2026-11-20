@@ -89,6 +89,31 @@ final class TrackerStore: NSObject{
         return try context.fetch(request).compactMap(makeTracker)
     }
     
+    func updateTracker(_ tracker: Tracker, categoryTitle: String) throws {
+        let request = TrackerCoreData.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        guard let trackerCoreData = try context.fetch(request).first else { return }
+        
+        trackerCoreData.title = tracker.title
+        trackerCoreData.color = tracker.color
+        trackerCoreData.emoji = tracker.emoji
+        trackerCoreData.scheduleValue = tracker.schedule
+        
+        if trackerCoreData.trackerCategory?.title != categoryTitle {
+            let categoryRequest = TrackerCategoryCoreData.fetchRequest()
+            categoryRequest.fetchLimit = 1
+            categoryRequest.predicate = NSPredicate(format: "title == %@", categoryTitle)
+            guard let category = try context.fetch(categoryRequest).first else {
+                throw TrackerStoreError.categoryNotFound
+            }
+            trackerCoreData.trackerCategory = category
+        }
+        
+        try context.save()
+    }
+    
     func deleteTracker(tracker: Tracker) throws{
         let request = TrackerCoreData.fetchRequest()
         request.fetchLimit = 1

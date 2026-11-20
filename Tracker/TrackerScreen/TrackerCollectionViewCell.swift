@@ -10,6 +10,10 @@ import UIKit
 class TrackerCollectionViewCell: UICollectionViewCell{
     static let identifier = "TrackerCollectionViewCell"
     
+    var onPinTapped: (() -> Void)?
+    var onEditTapped: (() -> Void)?
+    var onDeleteTapped: (() -> Void)?
+    
     private let internalView: UIView = {
         let view = UIView()
         view.backgroundColor = .green
@@ -27,7 +31,7 @@ class TrackerCollectionViewCell: UICollectionViewCell{
     private let title: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .whiteDay
+        label.textColor = .white
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -57,6 +61,7 @@ class TrackerCollectionViewCell: UICollectionViewCell{
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        setupContextMenu()
     }
     
     required init?(coder: NSCoder) {
@@ -69,6 +74,9 @@ class TrackerCollectionViewCell: UICollectionViewCell{
         contentView.addSubview(internalView)
         contentView.addSubview(dayCount)
         contentView.addSubview(doneButton)
+        
+        contentView.clipsToBounds = false
+        internalView.clipsToBounds = true
         
         NSLayoutConstraint.activate([
             internalView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -92,6 +100,11 @@ class TrackerCollectionViewCell: UICollectionViewCell{
         ])
     }
     
+    private func setupContextMenu(){
+        let interaction = UIContextMenuInteraction(delegate: self)
+        internalView.addInteraction(interaction)
+    }
+    
     @objc private func didTapOne(){
         onDoneButtonTapped?()
     }
@@ -100,9 +113,43 @@ class TrackerCollectionViewCell: UICollectionViewCell{
         self.title.text = title
         self.internalView.backgroundColor = color
         self.emoji.text = emoji
-        self.dayCount.text = "\(days) дней"
+        self.dayCount.text = days
         self.doneButton.backgroundColor = color
         let imageName = isCompleted ? "checkmark" : "plus"
         doneButton.setImage(UIImage(systemName: imageName), for: .normal)
+    }
+}
+
+
+extension TrackerCollectionViewCell: UIContextMenuInteractionDelegate{
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            let pinAction = UIAction(title: "Закрепить") { _ in
+                self.onPinTapped?()
+            }
+            
+            let editAction = UIAction(title: "Редактировать") { _ in
+                self.onEditTapped?()
+            }
+            
+            let deleteAction = UIAction(title: "Удалить", attributes: .destructive) { _ in
+                self.onDeleteTapped?()
+            }
+            return UIMenu(title: "", children: [pinAction, editAction, deleteAction])
+        }
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, previewForHighlightingMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        parameters.visiblePath = UIBezierPath(roundedRect: internalView.bounds, cornerRadius: 16)
+        return UITargetedPreview(view: self, parameters: parameters)
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, previewForDismissingMenuWithConfiguration configuration: UIContextMenuConfiguration) -> UITargetedPreview? {
+        let parameters = UIPreviewParameters()
+        parameters.backgroundColor = .clear
+        parameters.visiblePath = UIBezierPath(roundedRect: internalView.bounds, cornerRadius: 16)
+        return UITargetedPreview(view: self, parameters: parameters)
     }
 }

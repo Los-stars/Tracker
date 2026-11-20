@@ -7,11 +7,21 @@
 
 import Testing
 @testable import Tracker
+import SnapshotTesting
+import UIKit
 
 struct TrackerTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    @Test @MainActor
+    func viewControllerDark(){
+        let vc = TrackerViewController()
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .dark)))
+    }
+    
+    @Test @MainActor
+    func viewControllerLight(){
+        let vc = TrackerViewController()
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .light)))
     }
 
 }

@@ -127,12 +127,17 @@ final class TrackerViewController: UIViewController{
         presenter.viewDidLoad()
     }
     func updatePlaceholderVisibility(){
-        let hasTrackersForDate = presenter.hasTrackersForCurrentDate()
         let hasVisibleTrackers = presenter.hasVisibleTrackers()
+        let isFilterActive = presenter.currentFilter == .completed || presenter.currentFilter == .uncompleted
         
-        placeholderView.isHidden = hasTrackersForDate
-        placeholderNotFoundView.isHidden = !hasTrackersForDate || hasVisibleTrackers
-        filterButton.isHidden = !hasTrackersForDate
+        let showNotFound = !hasVisibleTrackers
+        && presenter.hasAnyTrackers()
+        && (isFilterActive || presenter.hasTrackersForCurrentDate())
+        let showEmpty = !hasVisibleTrackers && !showNotFound
+        
+        placeholderView.isHidden = !showEmpty
+        placeholderNotFoundView.isHidden = !showNotFound
+        filterButton.isHidden = showEmpty
     }
     
     func setupUIElements(){

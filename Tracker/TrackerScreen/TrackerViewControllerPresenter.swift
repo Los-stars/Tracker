@@ -181,6 +181,10 @@ final class TrackerViewControllerPresenter{
         onDataChanged?()
     }
     
+    func hasAnyTrackers() -> Bool {
+        categories.contains { !$0.trackers.isEmpty }
+    }
+    
     func hasTrackersForCurrentDate() -> Bool {
         let weekDay = WeekDay.from(calendarWeekday: Calendar.current.component(.weekday, from: currentDate))
         return categories.contains { category in

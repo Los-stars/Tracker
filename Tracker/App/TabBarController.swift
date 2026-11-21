@@ -15,8 +15,11 @@ final class TabBarController: UITabBarController{
     }
     
     func setupTabs(){
-        let trackersVC = TrackerViewController()
-        let trackersNav = UINavigationController(rootViewController: trackersVC)
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let trackerPresenter = appDelegate.makeTrackerViewController()
+        let trackerViewController = TrackerViewController()
+        trackerViewController.presenter = trackerPresenter
+        let trackersNav = UINavigationController(rootViewController: trackerViewController)
         trackersNav.tabBarItem = UITabBarItem(title: "Трекеры", image: UIImage(named: "trackers"), selectedImage: UIImage(named: "trackers"))
         
         let statsVC = StatisticsViewController()

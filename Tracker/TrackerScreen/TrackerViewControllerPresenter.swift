@@ -20,8 +20,9 @@ final class TrackerViewControllerPresenter{
     var trackerStore: TrackerStore?
     var trackerCategoryStore: TrackerCategoryStore?
     var trackerRecordStore: TrackerRecordStore?
-
     
+    var currentFilter: TaskFilter = .all
+
     func setInitialData(
         categories: [TrackerCategory],
         records: [TrackerRecord]
@@ -131,6 +132,13 @@ final class TrackerViewControllerPresenter{
             case .specific(let days): return days.contains(weekDay)
             }
         }
+        .filter { tracker in
+            switch currentFilter {
+            case .all, .current: return true
+            case .completed:     return isTrackerCompleted(tracker, on: currentDate)
+            case .uncompleted:   return !isTrackerCompleted(tracker, on: currentDate)
+            }
+        }
     }
 
     func numberOfTrackers(in section: Int) -> Int {
@@ -148,6 +156,44 @@ final class TrackerViewControllerPresenter{
             setInitialData(categories: trackerStore.categories, records: records)
         } catch {
             print("Error loading trackers: \(error)")
+        }
+    }
+    
+    func updateTracker(_ tracker: Tracker, category: String) {
+        do {
+            try trackerStore?.updateTracker(tracker, categoryTitle: category)
+        } catch {
+            print("Ошибка обновления трекера: \(error)")
+        }
+    }
+    
+    func deleteTracker(_ tracker: Tracker) {
+        do {
+            try trackerStore?.deleteTracker(tracker: tracker)
+        } catch {
+            print("Ошибка удаления трекера: \(error)")
+        }
+    }
+    
+    func apply(filter: TaskFilter) {
+        currentFilter = filter
+        if filter == .current { currentDate = Date() }
+        onDataChanged?()
+    }
+    
+    func hasAnyTrackers() -> Bool {
+        categories.contains { !$0.trackers.isEmpty }
+    }
+    
+    func hasTrackersForCurrentDate() -> Bool {
+        let weekDay = WeekDay.from(calendarWeekday: Calendar.current.component(.weekday, from: currentDate))
+        return categories.contains { category in
+            category.trackers.contains { tracker in
+                switch tracker.schedule {
+                case .everyday: return true
+                case .specific(let days): return days.contains(weekDay)
+                }
+            }
         }
     }
 }

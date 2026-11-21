@@ -15,7 +15,7 @@ class EditCategoryViewController: UIViewController {
     private lazy var nameTrackerTextField: UITextField = {
         let textField = UITextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.backgroundColor = .systemGray6
+        textField.backgroundColor = .backgroundDay
         textField.layer.cornerRadius = 10
         textField.clipsToBounds = true
         textField.clearButtonMode = .whileEditing

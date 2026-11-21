@@ -13,7 +13,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         let textField = UITextField()
         textField.placeholder = "Введите название трекера"
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.backgroundColor = .systemGray6
+        textField.backgroundColor = .backgroundDay
         textField.layer.cornerRadius = 10
         textField.clipsToBounds = true
         textField.clearButtonMode = .whileEditing
@@ -55,6 +55,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = .clear
+        tableView.separatorColor = .customGray
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.register(NewTaskIrregularTrackerTableViewCell.self, forCellReuseIdentifier: NewTaskIrregularTrackerTableViewCell.identifier)
         return tableView
@@ -128,7 +129,7 @@ final class NewTaskIrregularTrackerViewController: UIViewController{
         NewTaskElementSection(title: "Цвет", element: colorItem.map({.color($0)}))
     ]
     override func viewDidLoad() {
-        view.backgroundColor = .white
+        view.backgroundColor = .whiteDay
         
         menuTableView.dataSource = self
         menuTableView.delegate = self

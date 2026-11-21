@@ -19,8 +19,8 @@ class OnBoardingViewController: UIPageViewController {
         let pageControl = UIPageControl()
         pageControl.numberOfPages = pages.count
         pageControl.currentPage = 0
-        pageControl.currentPageIndicatorTintColor = .blackDay
-        pageControl.pageIndicatorTintColor = UIColor.blackDay.withAlphaComponent(0.3)
+        pageControl.currentPageIndicatorTintColor = .customBlack
+        pageControl.pageIndicatorTintColor = UIColor.customBlack.withAlphaComponent(0.3)
         pageControl.translatesAutoresizingMaskIntoConstraints = false
         return pageControl
     }()
@@ -28,8 +28,8 @@ class OnBoardingViewController: UIPageViewController {
     lazy var nextButton: UIButton = {
         let button = UIButton()
         button.setTitle("Вот это технологии!", for: .normal)
-        button.backgroundColor = .blackDay
-        button.setTitleColor(.whiteDay, for: .normal)
+        button.backgroundColor = .customBlack
+        button.setTitleColor(.customWhite, for: .normal)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(buttonTap), for: .touchUpInside)

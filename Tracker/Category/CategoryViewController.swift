@@ -12,6 +12,7 @@ class CategoryViewController: UIViewController {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.backgroundColor = .clear
+        tableView.separatorColor = .customGray
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.allowsMultipleSelection = false
@@ -92,7 +93,7 @@ class CategoryViewController: UIViewController {
     }
     
     func setupUI(){
-        view.backgroundColor = .white
+        view.backgroundColor = .whiteDay
         view.addSubview(tableView)
         view.addSubview(addCategoryButton)
         

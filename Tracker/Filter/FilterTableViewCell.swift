@@ -13,7 +13,8 @@ class FilterTableViewCell: UITableViewCell{
     
     private let checkmarkImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "checkmark")
+        imageView.image = UIImage(systemName: "checkmark")
+        imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 17, weight: .semibold)
         imageView.tintColor = .customBlue
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.isHidden = true

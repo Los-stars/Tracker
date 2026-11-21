@@ -96,11 +96,6 @@ final class TrackerStore: NSObject{
         
         guard let trackerCoreData = try context.fetch(request).first else { return }
         
-        trackerCoreData.title = tracker.title
-        trackerCoreData.color = tracker.color
-        trackerCoreData.emoji = tracker.emoji
-        trackerCoreData.scheduleValue = tracker.schedule
-        
         if trackerCoreData.trackerCategory?.title != categoryTitle {
             let categoryRequest = TrackerCategoryCoreData.fetchRequest()
             categoryRequest.fetchLimit = 1
@@ -110,6 +105,11 @@ final class TrackerStore: NSObject{
             }
             trackerCoreData.trackerCategory = category
         }
+        
+        trackerCoreData.title = tracker.title
+        trackerCoreData.color = tracker.color
+        trackerCoreData.emoji = tracker.emoji
+        trackerCoreData.scheduleValue = tracker.schedule
         
         try context.save()
     }

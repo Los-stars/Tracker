@@ -57,6 +57,29 @@ final class TrackerViewController: UIViewController{
         return label
     }()
     
+    private let placeholderNotFoundView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+    private let placeholderNotFoundImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "placeholderNotFound"))
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    private let placeholderNotFoundLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Ничего не найдено"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .blackDay
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private lazy var filterButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("filters", comment: ""), for: .normal)
@@ -94,6 +117,7 @@ final class TrackerViewController: UIViewController{
         
         setupUIElements()
         setupPlaceolder()
+        setupPlaceolderNotFound()
         
         presenter.onDataChanged = { [weak self] in
             self?.collectionView.reloadData()
@@ -103,7 +127,12 @@ final class TrackerViewController: UIViewController{
         presenter.viewDidLoad()
     }
     func updatePlaceholderVisibility(){
-        placeholderView.isHidden = presenter.hasVisibleTrackers()
+        let hasTrackersForDate = presenter.hasTrackersForCurrentDate()
+        let hasVisibleTrackers = presenter.hasVisibleTrackers()
+        
+        placeholderView.isHidden = hasTrackersForDate
+        placeholderNotFoundView.isHidden = !hasTrackersForDate || hasVisibleTrackers
+        filterButton.isHidden = !hasTrackersForDate
     }
     
     func setupUIElements(){
@@ -210,8 +239,28 @@ final class TrackerViewController: UIViewController{
             placeholderLabel.topAnchor.constraint(equalTo: placeholderImageView.bottomAnchor, constant: 8),
             placeholderLabel.bottomAnchor.constraint(equalTo: placeholderView.bottomAnchor)
         ])
+    }
+    
+    func setupPlaceolderNotFound(){
+        view.addSubview(placeholderNotFoundView)
+        placeholderNotFoundView.addSubview(placeholderNotFoundImageView)
+        placeholderNotFoundView.addSubview(placeholderNotFoundLabel)
         
-        
+        NSLayoutConstraint.activate([
+            placeholderNotFoundView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            placeholderNotFoundView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            placeholderNotFoundView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            placeholderNotFoundView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            placeholderNotFoundImageView.centerXAnchor.constraint(equalTo: placeholderNotFoundView.centerXAnchor),
+            placeholderNotFoundImageView.topAnchor.constraint(equalTo: placeholderNotFoundView.topAnchor),
+            placeholderNotFoundImageView.widthAnchor.constraint(equalToConstant: 80),
+            placeholderNotFoundImageView.heightAnchor.constraint(equalToConstant: 80),
+            
+            placeholderNotFoundLabel.centerXAnchor.constraint(equalTo: placeholderNotFoundView.centerXAnchor),
+            placeholderNotFoundLabel.topAnchor.constraint(equalTo: placeholderNotFoundImageView.bottomAnchor, constant: 8),
+            placeholderNotFoundLabel.bottomAnchor.constraint(equalTo: placeholderNotFoundView.bottomAnchor)
+        ])
     }
     
     @objc func addTask(){
@@ -258,10 +307,11 @@ extension TrackerViewController: UICollectionViewDataSource{
             presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
         }
         
-        cell.onPinTapped = { [weak self] in
-            guard let self else { return }
-            print("Закрепить: \(tracker.title)")
-        }
+        // TODO: Do it later
+//        cell.onPinTapped = { [weak self] in
+//            guard let self else { return }
+//            print("Закрепить: \(tracker.title)")
+//        }
         
         cell.onEditTapped = { [weak self] in
             guard let self else { return }

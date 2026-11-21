@@ -49,8 +49,8 @@ class TrackerCollectionViewCell: UICollectionViewCell{
         button.setImage(UIImage(systemName: "plus"), for: .normal)
         button.backgroundColor = .green
         button.layer.cornerRadius = 17
-        button.tintColor = .whiteDay
-        button.setTitleColor(.whiteDay, for: .normal)
+        button.tintColor = .customWhite
+        button.setTitleColor(.customWhite, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(didTapOne), for: .touchUpInside)
         return button
@@ -124,9 +124,10 @@ class TrackerCollectionViewCell: UICollectionViewCell{
 extension TrackerCollectionViewCell: UIContextMenuInteractionDelegate{
     func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-            let pinAction = UIAction(title: "Закрепить") { _ in
-                self.onPinTapped?()
-            }
+            // TODO: Do it later
+//            let pinAction = UIAction(title: "Закрепить") { _ in
+//                self.onPinTapped?()
+//            }
             
             let editAction = UIAction(title: "Редактировать") { _ in
                 self.onEditTapped?()
@@ -135,7 +136,7 @@ extension TrackerCollectionViewCell: UIContextMenuInteractionDelegate{
             let deleteAction = UIAction(title: "Удалить", attributes: .destructive) { _ in
                 self.onDeleteTapped?()
             }
-            return UIMenu(title: "", children: [pinAction, editAction, deleteAction])
+            return UIMenu(title: "", children: [editAction, deleteAction])
         }
     }
     

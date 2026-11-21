@@ -58,8 +58,10 @@ extension FilterViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: FilterTableViewCell.identifier, for: indexPath) as? FilterTableViewCell else { return UITableViewCell() }
         let filter = TaskFilter.allCases[indexPath.row]
-        var checkMark = filter == selectedFilter ? true : false
-        cell.configure(with: filter.rawValue, checkMark: checkMark)
+        let showCheckmark = filter == selectedFilter
+            && (filter == .completed || filter == .uncompleted)
+
+        cell.configure(with: filter.rawValue, checkMark: showCheckmark)
         return cell
     }
 }

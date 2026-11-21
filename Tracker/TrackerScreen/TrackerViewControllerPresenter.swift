@@ -180,6 +180,18 @@ final class TrackerViewControllerPresenter{
         if filter == .current { currentDate = Date() }
         onDataChanged?()
     }
+    
+    func hasTrackersForCurrentDate() -> Bool {
+        let weekDay = WeekDay.from(calendarWeekday: Calendar.current.component(.weekday, from: currentDate))
+        return categories.contains { category in
+            category.trackers.contains { tracker in
+                switch tracker.schedule {
+                case .everyday: return true
+                case .specific(let days): return days.contains(weekDay)
+                }
+            }
+        }
+    }
 }
 
 

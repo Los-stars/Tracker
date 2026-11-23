@@ -124,12 +124,22 @@ final class TrackerStore: NSObject{
     
     private func makeTracker(_ object: TrackerCoreData) -> Tracker?{
         guard let id = object.id,
-                      let title = object.title,
-                      let color = object.color as? UIColor,
-                      let emoji = object.emoji,
-                      let schedule = object.scheduleValue as? Schedule
+              let title = object.title,
+              let color = object.color as? UIColor,
+              let emoji = object.emoji,
+              let schedule = object.scheduleValue as? Schedule
                 else { return nil }
-        return Tracker(id: id, title: title, color: color, emoji: emoji, schedule: schedule)
+        return Tracker(id: id, title: title, color: color, emoji: emoji,
+                       schedule: schedule, isPinned: object.isPinned)
+    }
+    
+    func togglePin(trackerId: UUID) throws {
+        let request = TrackerCoreData.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", trackerId as CVarArg)
+        guard let trackerCoreData = try context.fetch(request).first else { return }
+        trackerCoreData.isPinned.toggle()
+        try context.save()
     }
 }
 

@@ -22,12 +22,15 @@ final class TrackerViewControllerPresenter{
     var trackerRecordStore: TrackerRecordStore?
     
     var currentFilter: TaskFilter = .all
+    
+    private var originalCategories: [TrackerCategory] = []
 
     func setInitialData(
         categories: [TrackerCategory],
         records: [TrackerRecord]
     ) {
-        self.categories = categories
+        self.originalCategories = categories
+        self.categories = makeDisplayCategories(from: categories)
         self.completedTrackers = records
 
         onDataChanged?()
@@ -91,6 +94,27 @@ final class TrackerViewControllerPresenter{
         catch{
             print("Core Data error: \(error)")
         }
+    }
+    
+    private func makeDisplayCategories(from categories: [TrackerCategory]) -> [TrackerCategory] {
+        let pinned = categories.flatMap { $0.trackers }.filter { $0.isPinned }
+        let unpinned = categories.map {
+            TrackerCategory(title: $0.title, trackers: $0.trackers.filter { !$0.isPinned })
+        }
+        guard !pinned.isEmpty else { return unpinned }
+        return [TrackerCategory(title: NSLocalizedString("pinned", comment: ""), trackers: pinned)] + unpinned
+    }
+
+    func togglePin(_ tracker: Tracker) {
+        do {
+            try trackerStore?.togglePin(trackerId: tracker.id)
+        } catch {
+            print("Ошибка закрепления: \(error)")
+        }
+    }
+
+    func categoryTitle(for tracker: Tracker) -> String {
+        originalCategories.first { $0.trackers.contains { $0.id == tracker.id } }?.title ?? ""
     }
     
     func addTracker(_ tracker: Tracker, toCategory categoryTitle: String) {

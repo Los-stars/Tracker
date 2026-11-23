@@ -160,7 +160,8 @@ final class EditTrackerViewController: UIViewController{
             title: nameTrackerTextField.text ?? tracker.title,
             color: colorItem[selectedColorIndex],
             emoji: emojiItem[selectedEmojiIndex],
-            schedule: presenter.schedule)
+            schedule: presenter.schedule,
+            isPinned: tracker.isPinned)
         
         onSave?(updated, category)
         dismiss(animated: true)

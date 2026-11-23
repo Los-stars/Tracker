@@ -305,25 +305,24 @@ extension TrackerViewController: UICollectionViewDataSource{
             NSLocalizedString("numberOfDays", tableName: "LocalizableDict", comment: ""),
             trackerRecord
         )
-        cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: daysText, isCompleted: isCompleted)
+        cell.configure(title: tracker.title, color: tracker.color, emoji: tracker.emoji, days: daysText, isCompleted: isCompleted, isPinned: tracker.isPinned)
         cell.onDoneButtonTapped = { [weak self] in
             guard let self else { return }
             AnalyticsService.shared.report(event: .click, screen: .main, item: .track)
             presenter.markTrackerCompleted(tracker, on: presenter.currentDate)
         }
         
-        // TODO: Do it later
-//        cell.onPinTapped = { [weak self] in
-//            guard let self else { return }
-//            print("Закрепить: \(tracker.title)")
-//        }
+        cell.onPinTapped = { [weak self] in
+            guard let self else { return }
+            self.presenter.togglePin(tracker)
+        }
         
         cell.onEditTapped = { [weak self] in
             guard let self else { return }
             
             AnalyticsService.shared.report(event: .click, screen: .main, item: .edit)
             
-            let vc = EditTrackerViewController(tracker: tracker, category: presenter.categories[indexPath.section].title, completedDay: trackerRecord)
+            let vc = EditTrackerViewController(tracker: tracker, category: presenter.categoryTitle(for: tracker), completedDay: trackerRecord)
             vc.title = "Редактирование привычки"
             vc.trackerCategoryStore = presenter.trackerCategoryStore
             let navVC = UINavigationController(rootViewController: vc)

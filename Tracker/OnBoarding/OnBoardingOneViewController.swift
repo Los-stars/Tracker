@@ -18,7 +18,7 @@ final class OnBoardingOneViewController: UIViewController{
     let titleLabel: UILabel = {
         let title = UILabel()
         title.text = "Отслеживайте только то, что хотите"
-        title.textColor = .blackDay
+        title.textColor = .customBlack
         title.numberOfLines = 2
         title.textAlignment = .center
         title.translatesAutoresizingMaskIntoConstraints = false

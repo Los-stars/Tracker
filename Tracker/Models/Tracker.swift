@@ -14,18 +14,21 @@ struct Tracker{
     let color: UIColor
     let emoji: String
     let schedule: Schedule
+    let isPinned: Bool
     
     init(
         id: UUID = UUID(),
         title: String,
         color: UIColor,
         emoji: String,
-        schedule: Schedule
+        schedule: Schedule,
+        isPinned: Bool = false
     ) {
         self.id = id
         self.title = title
         self.color = color
         self.emoji = emoji
         self.schedule = schedule
+        self.isPinned = isPinned
     }
 }

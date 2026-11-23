@@ -116,13 +116,8 @@ final class TrackerCategoryStore: TrackerCategoryStoreProtocol{
                 return nil
             }
             
-            return Tracker(
-                id: id,
-                title: title,
-                color: color,
-                emoji: emoji,
-                schedule: schedule
-            )
+            return Tracker(id: id, title: title, color: color, emoji: emoji,
+                           schedule: schedule, isPinned: tracker.isPinned)
         }
         
         return TrackerCategory(

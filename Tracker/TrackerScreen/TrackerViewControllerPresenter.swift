@@ -20,13 +20,17 @@ final class TrackerViewControllerPresenter{
     var trackerStore: TrackerStore?
     var trackerCategoryStore: TrackerCategoryStore?
     var trackerRecordStore: TrackerRecordStore?
-
     
+    var currentFilter: TaskFilter = .all
+    
+    private var originalCategories: [TrackerCategory] = []
+
     func setInitialData(
         categories: [TrackerCategory],
         records: [TrackerRecord]
     ) {
-        self.categories = categories
+        self.originalCategories = categories
+        self.categories = makeDisplayCategories(from: categories)
         self.completedTrackers = records
 
         onDataChanged?()
@@ -92,6 +96,27 @@ final class TrackerViewControllerPresenter{
         }
     }
     
+    private func makeDisplayCategories(from categories: [TrackerCategory]) -> [TrackerCategory] {
+        let pinned = categories.flatMap { $0.trackers }.filter { $0.isPinned }
+        let unpinned = categories.map {
+            TrackerCategory(title: $0.title, trackers: $0.trackers.filter { !$0.isPinned })
+        }
+        guard !pinned.isEmpty else { return unpinned }
+        return [TrackerCategory(title: NSLocalizedString("pinned", comment: ""), trackers: pinned)] + unpinned
+    }
+
+    func togglePin(_ tracker: Tracker) {
+        do {
+            try trackerStore?.togglePin(trackerId: tracker.id)
+        } catch {
+            print("Ошибка закрепления: \(error)")
+        }
+    }
+
+    func categoryTitle(for tracker: Tracker) -> String {
+        originalCategories.first { $0.trackers.contains { $0.id == tracker.id } }?.title ?? ""
+    }
+    
     func addTracker(_ tracker: Tracker, toCategory categoryTitle: String) {
         var newCategories = categories
         
@@ -131,6 +156,13 @@ final class TrackerViewControllerPresenter{
             case .specific(let days): return days.contains(weekDay)
             }
         }
+        .filter { tracker in
+            switch currentFilter {
+            case .all, .current: return true
+            case .completed:     return isTrackerCompleted(tracker, on: currentDate)
+            case .uncompleted:   return !isTrackerCompleted(tracker, on: currentDate)
+            }
+        }
     }
 
     func numberOfTrackers(in section: Int) -> Int {
@@ -148,6 +180,44 @@ final class TrackerViewControllerPresenter{
             setInitialData(categories: trackerStore.categories, records: records)
         } catch {
             print("Error loading trackers: \(error)")
+        }
+    }
+    
+    func updateTracker(_ tracker: Tracker, category: String) {
+        do {
+            try trackerStore?.updateTracker(tracker, categoryTitle: category)
+        } catch {
+            print("Ошибка обновления трекера: \(error)")
+        }
+    }
+    
+    func deleteTracker(_ tracker: Tracker) {
+        do {
+            try trackerStore?.deleteTracker(tracker: tracker)
+        } catch {
+            print("Ошибка удаления трекера: \(error)")
+        }
+    }
+    
+    func apply(filter: TaskFilter) {
+        currentFilter = filter
+        if filter == .current { currentDate = Date() }
+        onDataChanged?()
+    }
+    
+    func hasAnyTrackers() -> Bool {
+        categories.contains { !$0.trackers.isEmpty }
+    }
+    
+    func hasTrackersForCurrentDate() -> Bool {
+        let weekDay = WeekDay.from(calendarWeekday: Calendar.current.component(.weekday, from: currentDate))
+        return categories.contains { category in
+            category.trackers.contains { tracker in
+                switch tracker.schedule {
+                case .everyday: return true
+                case .specific(let days): return days.contains(weekDay)
+                }
+            }
         }
     }
 }

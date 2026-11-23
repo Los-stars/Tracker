@@ -20,11 +20,12 @@ final class TabBarController: UITabBarController{
         let trackerViewController = TrackerViewController()
         trackerViewController.presenter = trackerPresenter
         let trackersNav = UINavigationController(rootViewController: trackerViewController)
-        trackersNav.tabBarItem = UITabBarItem(title: "Трекеры", image: UIImage(named: "trackers"), selectedImage: UIImage(named: "trackers"))
+        trackersNav.tabBarItem = UITabBarItem(title: NSLocalizedString("trackers", comment: ""), image: UIImage(named: "trackers"), selectedImage: UIImage(named: "trackers"))
         
         let statsVC = StatisticsViewController()
+        statsVC.trackerRecordStore = trackerPresenter.trackerRecordStore
         let statsNav = UINavigationController(rootViewController: statsVC)
-        statsNav.tabBarItem = UITabBarItem(title: "Статистика", image: UIImage(named: "stats"), selectedImage: UIImage(named: "stats"))
+        statsNav.tabBarItem = UITabBarItem(title: NSLocalizedString("statistics", comment: ""), image: UIImage(named: "stats"), selectedImage: UIImage(named: "stats"))
         
         viewControllers = [trackersNav, statsNav]
     }
@@ -33,6 +34,7 @@ final class TabBarController: UITabBarController{
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.shadowColor = .systemGray5
+        appearance.backgroundColor = .whiteDay
         
         tabBar.standardAppearance = appearance
         if #available(iOS 15.0, *) {

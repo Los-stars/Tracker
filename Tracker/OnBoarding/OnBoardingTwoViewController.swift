@@ -19,7 +19,7 @@ final class OnBoardingTwoViewController: UIViewController{
     let titleLabel: UILabel = {
         let title = UILabel()
         title.text = "Даже если это не литры воды и йога"
-        title.textColor = .blackDay
+        title.textColor = .customBlack
         title.textAlignment = .center
         title.numberOfLines = 2
         title.translatesAutoresizingMaskIntoConstraints = false
